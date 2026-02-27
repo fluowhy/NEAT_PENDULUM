@@ -3,7 +3,7 @@
 namespace config{
     const int window_size_x { 900 };
     const int window_size_y { 400 };
-    const int frame_rate { 60 };
+    const int frame_rate { 120 };
     const float dt { 1.f / static_cast<float>(frame_rate) }; 
     const int width { 800 };
     const int height { 300 };

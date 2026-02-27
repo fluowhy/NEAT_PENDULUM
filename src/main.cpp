@@ -22,7 +22,6 @@ int main(){
     sf::RectangleShape rectangle({ config::width, config::height });
     rectangle.setFillColor(sf::Color::White);
     rectangle.setPosition({ static_cast<float>(config::offset_x_rect), static_cast<float>(config::offset_y_rect) });
-
     
 
     while (window.isOpen()){
