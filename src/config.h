@@ -9,10 +9,13 @@ namespace config{
     const int height { 800 };
     const int offset_x {(window_size_x - width) / 2};
     const int offset_y {(window_size_y - height) / 2};
+    const float g { 9.81 };
+    const float gamma { 1e-1 };
+    const float max_force { 100 };
     namespace cart{
-        const float width { 20 };
+        const float width { 40 };
         const float height { 20 };
         const float pole_width { 2 };
-        const float pole_length { 30 };
+        const float pole_length { 100 };
     }
 }
