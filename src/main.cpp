@@ -12,7 +12,7 @@ void print_state(CartPole& cart_pole){
 }
 
 int main(){
-    sf::RenderWindow window(sf::VideoMode({ config::window_size_x, config::window_size_x }), "PuckWorld");
+    sf::RenderWindow window(sf::VideoMode({ config::window_size_x, config::window_size_y }), "PuckWorld");
     window.setFramerateLimit(config::frame_rate);
     window.setVerticalSyncEnabled(true);
 
@@ -21,7 +21,7 @@ int main(){
 
     sf::RectangleShape rectangle({ config::width, config::height });
     rectangle.setFillColor(sf::Color::White);
-    rectangle.setPosition({ static_cast<float>(config::offset_x), static_cast<float>(config::offset_y) });
+    rectangle.setPosition({ static_cast<float>(config::offset_x_rect), static_cast<float>(config::offset_y_rect) });
 
     
 
@@ -33,7 +33,7 @@ int main(){
         cart_pole.update();
         print_state(cart_pole);
         
-        rectangle.setFillColor(sf::Color::Black);        
+        // rectangle.setFillColor(sf::Color::Black);        
         window.clear(sf::Color::Black);
         window.draw(rectangle);
         window.draw(cart_pole.body);
