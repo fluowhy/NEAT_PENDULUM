@@ -7,6 +7,19 @@
 #include <iostream>
 
 
+float deg_to_rad(float deg){
+    return deg * 3.1416f / 180.f;
+}
+
+
+float get_reward(CartPole& cart_pole){
+    if (std::abs(cart_pole.angle) < deg_to_rad(config::ang_thr_deg)){
+        return 1.f;
+    }
+    else return 0.f;
+}
+
+
 template <typename T>
 void print_vector(std::vector<T>& v){
     for (T vi : v){
@@ -30,11 +43,8 @@ void print_state(CartPole& cart_pole){
     std::cout << "x: " << cart_pole.x << ", vx: " << cart_pole.vx << ", ax: " << cart_pole.ax << ", ang: " << cart_pole.angle << ", w: " << cart_pole.w << ", dot_w: " << cart_pole.w_dot << "\n";
 }
 
-int main(){
-    sf::RenderWindow window(sf::VideoMode({ config::window_size_x, config::window_size_y }), "PuckWorld");
-    window.setFramerateLimit(config::frame_rate);
-    window.setVerticalSyncEnabled(true);
 
+std::vector<float> simulate(sf::RenderWindow& window, NEAT::Genome& genome){
     CartPole cart_pole {};
     cart_pole.set();
 
@@ -42,17 +52,16 @@ int main(){
     rectangle.setFillColor(sf::Color::White);
     rectangle.setPosition({ static_cast<float>(config::offset_x_rect), static_cast<float>(config::offset_y_rect) });
 
-    std::vector<NEAT::Genome> genomes { NEAT::generate_initial_networks(config::n_pop, config::n_in, config::n_out) };
     std::vector<float> nn_input(config::n_in, 0);
     std::vector<float> nn_output(config::n_out, 0);
-    NEAT::Genome& genome { genomes[0] };
+    std::vector<float> rewards {};
 
     while (window.isOpen()){
         cart_pole.force = 0;
         process_events(window);
         // process_events_user_inputs(window, cart_pole);
         nn_input = get_nn_input(cart_pole);
-        nn_output = NEAT::forward(nn_input, genomes[0]);
+        nn_output = NEAT::forward(nn_input, genome);
         print_vector<float>(nn_input);
         print_vector<float>(nn_output);
         cart_pole.force = nn_output[0] * config::max_force;
@@ -60,6 +69,7 @@ int main(){
         dynamics(cart_pole);
         cart_pole.update();
         print_state(cart_pole);
+        rewards.push_back(get_reward(cart_pole));
         
         // rectangle.setFillColor(sf::Color::Black);        
         window.clear(sf::Color::Black);
@@ -68,7 +78,21 @@ int main(){
         window.draw(cart_pole.arm);
         window.display();
     }
+    return rewards;
+}
 
-    
+
+int main(){
+    sf::RenderWindow window(sf::VideoMode({ config::window_size_x, config::window_size_y }), "Cart Pole");
+    window.setFramerateLimit(config::frame_rate);
+    window.setVerticalSyncEnabled(true);       
+
+    std::vector<NEAT::Genome> genomes { NEAT::generate_initial_networks(config::n_pop, config::n_in, config::n_out) };
+    // std::vector<float> nn_input(config::n_in, 0);
+    // std::vector<float> nn_output(config::n_out, 0);
+    // NEAT::Genome& genome { genomes[0] };  
+
+    std::vector<float> sim_rewards { simulate(window, genomes[0]) };
+    print_vector(sim_rewards);
     return 0;
 }
