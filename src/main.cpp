@@ -17,9 +17,10 @@ float get_reward(CartPole& cart_pole){
     if (std::abs(cart_pole.angle) < deg_to_rad(config::ang_thr_deg)){
         reward = 1.f;
     }
-    if (std::abs(cart_pole.x) > 100){
-        reward -= 0.5f;
-    }
+    // if (std::abs(cart_pole.x) > 100){
+    //     reward -= 0.5f;
+    // }
+    reward -= std::abs(cart_pole.x) / (static_cast<float>(config::width) * 0.5f);
     return reward;
 }
 
@@ -85,7 +86,6 @@ float simulate(sf::RenderWindow& window, NEAT::Genome& genome){
     std::vector<float> nn_input(config::n_in, 0);
     std::vector<float> nn_output(config::n_out, 0);
     std::vector<float> rewards {};
-    float sim_time { config::max_sim_time };
 
     while (window.isOpen()){
         cart_pole.force = 0;
@@ -99,7 +99,6 @@ float simulate(sf::RenderWindow& window, NEAT::Genome& genome){
         cart_pole.update();
         // print_state(cart_pole);
         rewards.push_back(get_reward(cart_pole));
-        sim_time -= config::dt;
 
         // rectangle.setFillColor(sf::Color::Black);        
         window.clear(sf::Color::Black);
@@ -107,11 +106,6 @@ float simulate(sf::RenderWindow& window, NEAT::Genome& genome){
         window.draw(cart_pole.body);
         window.draw(cart_pole.arm);
         window.display();
-
-        if (sim_time < 0){
-            window.close();
-            return std::reduce(rewards.begin(), rewards.end());
-        }
     }
     return std::reduce(rewards.begin(), rewards.end());
 }
@@ -139,7 +133,6 @@ int main(){
         // print_vector(fitness);
         new_genomes = NEAT::get_next_population(genomes, sort_index);
     }
-
 
     sf::RenderWindow window(sf::VideoMode({ config::window_size_x, config::window_size_y }), "Cart Pole");
     window.setFramerateLimit(config::frame_rate);
