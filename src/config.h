@@ -3,7 +3,7 @@
 namespace config{
     const int window_size_x { 900 };
     const int window_size_y { 400 };
-    const int frame_rate { 60 };
+    const int frame_rate { 120 };
     const float dt { 1.f / static_cast<float>(frame_rate) }; 
     const int width { 800 };
     const int height { 300 };
@@ -14,8 +14,9 @@ namespace config{
     const float max_force { 128 };
     const int offset_x_rect { 50 };
     const int offset_y_rect { 50 };
-    const float max_sim_time { 10 };
-    const int n_pop { 8 };
+    const float max_sim_time { 20 };
+    const int n_pop { 256 };
+    const int n_gen { 256 };
     const int n_in { 4 };
     const int n_out { 1 };
     const float ang_thr_deg { 10.f };
