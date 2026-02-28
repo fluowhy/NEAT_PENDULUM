@@ -11,10 +11,14 @@ namespace config{
     const int offset_y { window_size_y / 2 };
     const float g { 9.81 };
     const float gamma { 1e-2 };
-    const float max_force { 512 };
+    const float max_force { 256 };
     const int offset_x_rect { 50 };
     const int offset_y_rect { 50 };
     const float max_sim_time { 10 };
+    const int n_pop { 8 };
+    const int n_in { 4 };
+    const int n_out { 1 };
+
     namespace cart{
         const float width { 40 };
         const float height { 20 };
