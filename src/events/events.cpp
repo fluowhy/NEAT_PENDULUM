@@ -1,7 +1,7 @@
 #include "events.h"
 
 
-void process_events(sf::Window& window, CartPole& cart_pole){
+void process_events_user_inputs(sf::Window& window, CartPole& cart_pole){
     while (const std::optional event = window.pollEvent()){
         if (event->is<sf::Event::Closed>()){
             window.close();
@@ -16,6 +16,18 @@ void process_events(sf::Window& window, CartPole& cart_pole){
         else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)){
             cart_pole.force = config::max_force;
             std::cout << "Right\n";
+        }
+    }
+}
+
+
+void process_events(sf::Window& window){
+    while (const std::optional event = window.pollEvent()){
+        if (event->is<sf::Event::Closed>()){
+            window.close();
+        }
+        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Escape)){
+            window.close();
         }
     }
 }

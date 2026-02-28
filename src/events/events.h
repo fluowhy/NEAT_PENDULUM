@@ -6,4 +6,6 @@
 #include <iostream>
 #include <optional>
 
-void process_events(sf::Window& window, CartPole& cart_pole);
+void process_events_user_inputs(sf::Window& window, CartPole& cart_pole);
+
+void process_events(sf::Window& window);
