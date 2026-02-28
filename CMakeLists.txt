@@ -4,7 +4,8 @@ project(NEAT-PENDULUM LANGUAGES CXX)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_CXX_STANDARD=23)
 set(CMAKE_CXX_COMPILER=g++)
-set(CMAKE_BUILD_TYPE=Debug)
+set(CMAKE_BUILD_TYPE=Release)
+
 # Release
 include(FetchContent)
 FetchContent_Declare(SFML
@@ -36,7 +37,10 @@ target_include_directories(main PRIVATE src/cart_pole src/neat src/events src/ne
 target_link_libraries(main PRIVATE SFML::Graphics cart_pole events neat)
 
 
-# add_compile_options(-Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -DNDEBUG -O3)
-add_compile_options(-fsanitize=undefined)
-# add_compile_options(-march=native)
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_options(-fsanitize=undefined -g)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_compile_options(-Wall -Wextra -Wshadow -Wnon-virtual-dtor -fsanitize=undefined -pedantic -DNDEBUG -O3 -march=native)
+endif()
+
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT main)

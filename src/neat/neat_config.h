@@ -13,7 +13,7 @@ namespace neat_config{
     const int max_nodes { 4 };
     const float top_ratio { 0.3f };
     const int n_gen { 1024 };
-    const int n_pop { 256 };
+    const int n_pop { 512 };
     const int n_samples { 128 };
     const float sample_std { 1e-1 };
 }
