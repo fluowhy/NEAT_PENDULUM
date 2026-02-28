@@ -11,7 +11,7 @@ namespace config{
     const int offset_y { window_size_y / 2 };
     const float g { 9.81 };
     const float gamma { 1e-2 };
-    const float max_force { 256 };
+    const float max_force { 128 };
     const int offset_x_rect { 50 };
     const int offset_y_rect { 50 };
     const float max_sim_time { 10 };

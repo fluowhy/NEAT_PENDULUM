@@ -7,11 +7,20 @@
 #include <iostream>
 
 
+template <typename T>
+void print_vector(std::vector<T>& v){
+    for (T vi : v){
+        std::cout << vi << ", ";
+    }
+    std::cout << "\n";
+}
+
+
 std::vector<float> get_nn_input(CartPole& cart_pole){
     std::vector<float> input_array(config::n_in, 0);
-    input_array[0] = cart_pole.x;
+    input_array[0] = cart_pole.x / (static_cast<float>(config::width) * 0.5f);
     input_array[1] = cart_pole.angle;
-    input_array[2] = cart_pole.vx;
+    input_array[2] = cart_pole.vx / (static_cast<float>(config::width) * 0.5f);
     input_array[3] = cart_pole.w;
     return input_array;
 }
@@ -44,6 +53,8 @@ int main(){
         // process_events_user_inputs(window, cart_pole);
         nn_input = get_nn_input(cart_pole);
         nn_output = NEAT::forward(nn_input, genomes[0]);
+        print_vector<float>(nn_input);
+        print_vector<float>(nn_output);
         cart_pole.force = nn_output[0] * config::max_force;
 
         dynamics(cart_pole);
