@@ -6,17 +6,15 @@ void dynamics(CartPole& cart_pole){
     if (cart_pole.x > max_pos){
         cart_pole.x = max_pos;
         cart_pole.vx = 0;
-        cart_pole.ax = (cart_pole.force > 0) ? 0 : cart_pole.force;
+        cart_pole.force = (cart_pole.force > 0) ? 0 : cart_pole.force;
     }
     else if (cart_pole.x < - max_pos){
         cart_pole.x = - max_pos;
         cart_pole.vx = 0;
-        cart_pole.ax = (cart_pole.force < 0) ? 0 : cart_pole.force;
+        cart_pole.force = (cart_pole.force < 0) ? 0 : cart_pole.force;
     }
-    else{
-        cart_pole.ax = (cart_pole.force + cart_pole.m * cart_pole.l * (cart_pole.w_dot * std::cos(cart_pole.angle) - std::sin(cart_pole.angle) * cart_pole.w * cart_pole.w)) / (cart_pole.M + cart_pole.m);
-    }
-        
+
+    cart_pole.ax = (cart_pole.force + cart_pole.m * cart_pole.l * (cart_pole.w_dot * std::cos(cart_pole.angle) - std::sin(cart_pole.angle) * cart_pole.w * cart_pole.w)) / (cart_pole.M + cart_pole.m);
     cart_pole.w_dot = (config::g * std::sin(cart_pole.angle) + cart_pole.ax * std::cos(cart_pole.angle)) / cart_pole.l;
 
     cart_pole.ax += - config::gamma * cart_pole.vx;

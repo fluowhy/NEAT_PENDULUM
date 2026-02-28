@@ -44,7 +44,7 @@ void print_state(CartPole& cart_pole){
 }
 
 
-std::vector<float> simulate(sf::RenderWindow& window, NEAT::Genome& genome){
+float simulate(sf::RenderWindow& window, NEAT::Genome& genome){
     CartPole cart_pole {};
     cart_pole.set();
 
@@ -78,7 +78,7 @@ std::vector<float> simulate(sf::RenderWindow& window, NEAT::Genome& genome){
         window.draw(cart_pole.arm);
         window.display();
     }
-    return rewards;
+    return std::reduce(rewards.begin(), rewards.end());
 }
 
 
@@ -92,7 +92,7 @@ int main(){
     // std::vector<float> nn_output(config::n_out, 0);
     // NEAT::Genome& genome { genomes[0] };  
 
-    std::vector<float> sim_rewards { simulate(window, genomes[0]) };
-    print_vector(sim_rewards);
+    float sim_reward { simulate(window, genomes[0]) };
+    std::cout << "Reward: " << sim_reward << "\n";
     return 0;
 }
