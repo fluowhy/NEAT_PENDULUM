@@ -32,8 +32,8 @@ target_link_libraries(events PRIVATE SFML::Graphics)
 
 set(MY_EXECUTABLE_SOURCES src/main.cpp)
 add_executable(main ${MY_EXECUTABLE_SOURCES})
-target_include_directories(main PRIVATE src/cart_pole src/neat src/events src/)
-target_link_libraries(main PRIVATE SFML::Graphics cart_pole events)
+target_include_directories(main PRIVATE src/cart_pole src/neat src/events src/neat src/)
+target_link_libraries(main PRIVATE SFML::Graphics cart_pole events neat)
 
 
 # add_compile_options(-Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -DNDEBUG -O3)
