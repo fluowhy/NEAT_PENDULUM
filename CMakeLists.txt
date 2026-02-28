@@ -5,9 +5,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_CXX_STANDARD=23)
 set(CMAKE_CXX_COMPILER=g++)
 set(CMAKE_BUILD_TYPE=Debug)
-# set(CMAKE_CXX_FLAGS(_DEBUG/_RELEASE)=-march=native)
-# release
-
+# Release
 include(FetchContent)
 FetchContent_Declare(SFML
     GIT_REPOSITORY https://github.com/SFML/SFML.git
@@ -17,14 +15,28 @@ FetchContent_Declare(SFML
     SYSTEM)
 FetchContent_MakeAvailable(SFML)
 
-set(MY_LIBRARY_SOURCES src/neat/neat.cpp src/neat/topological_sort.cpp)
-add_library(neat STATIC ${MY_LIBRARY_SOURCES})
+set(NEAT_SOURCES src/neat/neat.cpp src/neat/topological_sort.cpp)
+set(CART_POLE_SOURCES src/cart_pole/cart_pole.cpp)
+set(EVENTS_SOURCES src/events/events.cpp)
 
-set(MY_EXECUTABLE_SOURCES src/main.cpp src/events.cpp)
+add_library(neat STATIC ${NEAT_SOURCES})
+target_include_directories(neat PRIVATE src/neat src/)
+
+add_library(cart_pole STATIC ${CART_POLE_SOURCES})
+target_include_directories(cart_pole PRIVATE src/cart_pole src/)
+target_link_libraries(cart_pole PRIVATE SFML::Graphics)
+
+add_library(events STATIC ${EVENTS_SOURCES})
+target_include_directories(events PRIVATE src/cart_pole src/)
+target_link_libraries(events PRIVATE SFML::Graphics)
+
+set(MY_EXECUTABLE_SOURCES src/main.cpp)
 add_executable(main ${MY_EXECUTABLE_SOURCES})
-target_compile_features(main PRIVATE cxx_std_23)
+target_include_directories(main PRIVATE src/cart_pole src/neat src/events src/)
+target_link_libraries(main PRIVATE SFML::Graphics cart_pole events)
+
+
 # add_compile_options(-Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -DNDEBUG -O3)
 add_compile_options(-fsanitize=undefined)
-target_link_libraries(main PRIVATE SFML::Graphics)
-
+# add_compile_options(-march=native)
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT main)
