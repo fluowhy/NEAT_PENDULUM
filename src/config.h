@@ -14,6 +14,7 @@ namespace config{
     const float max_force { 512 };
     const int offset_x_rect { 50 };
     const int offset_y_rect { 50 };
+    const float max_sim_time { 10 };
     namespace cart{
         const float width { 40 };
         const float height { 20 };

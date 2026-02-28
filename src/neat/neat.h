@@ -1,8 +1,7 @@
 #ifndef NEAT_H
 #define NEAT_H
 
-#include "config.h"
-#include "neat.h"
+#include "neat_config.h"
 #include "topological_sort.h"
 #include "random.h"
 #include <cmath>

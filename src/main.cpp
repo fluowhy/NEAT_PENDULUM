@@ -1,5 +1,4 @@
 #include "config.h"
-#include "dynamics.h"
 #include "cart_pole.h"
 #include "random.h"
 #include "events.h"

@@ -1,7 +1,4 @@
-#include "config.h"
 #include "neat.h"
-#include "topological_sort.h"
-#include "random.h"
 
 
 void NEAT::sort_nodes(NEAT::Genome& network){
@@ -256,11 +253,11 @@ std::vector<NEAT::ConnectionGene> NEAT::existing_connections {};
 
 void NEAT::bias_mod(NEAT::Genome& network){
 	int idx { Random::get(0, static_cast<int>(network.node_genes.size() - 1)) };
-    if (Random::get_uniform<float>(0, 1) <= config::mut::bias_disable_prob){
+    if (Random::get_uniform<float>(0, 1) <= neat_config::mut::bias_disable_prob){
         network.node_genes[idx].bias = 0;
     }
     else{
-        if (Random::get_uniform<float>(0, 1) <= config::mut::new_value_prob){
+        if (Random::get_uniform<float>(0, 1) <= neat_config::mut::new_value_prob){
 		    network.node_genes[idx].bias = Random::random_normal<float>(0.f, 0.1f);
 	    }
         else{
@@ -272,7 +269,7 @@ void NEAT::bias_mod(NEAT::Genome& network){
 
 void NEAT::weight_mod(NEAT::Genome& network){
 	int idx { Random::get(0, static_cast<int>(network.conn_genes.size() - 1)) };
-	if (Random::get_uniform<float>(0, 1) <= config::mut::new_value_prob){
+	if (Random::get_uniform<float>(0, 1) <= neat_config::mut::new_value_prob){
 		network.conn_genes[idx].weight = Random::random_normal<float>(0.f, 0.1f);
 	}
 	else{
@@ -282,8 +279,8 @@ void NEAT::weight_mod(NEAT::Genome& network){
 
 
 void NEAT::mutate(Genome& network){
-    if (Random::get_uniform<float>(0, 1) <= config::mut::mutate_genome_prob){
-        if (Random::get_uniform<float>(0, 1) <= config::mut::bias_mod_prob){
+    if (Random::get_uniform<float>(0, 1) <= neat_config::mut::mutate_genome_prob){
+        if (Random::get_uniform<float>(0, 1) <= neat_config::mut::bias_mod_prob){
             bias_mod(network);
         }
         else{
@@ -291,10 +288,10 @@ void NEAT::mutate(Genome& network){
         }
     }
     
-    if (Random::get_uniform<float>(0, 1) <= config::mut::new_conn_prob){
+    if (Random::get_uniform<float>(0, 1) <= neat_config::mut::new_conn_prob){
         NEAT::add_connection(network);
     }
-    if (Random::get_uniform<float>(0, 1) <= config::mut::new_node_prob){
+    if (Random::get_uniform<float>(0, 1) <= neat_config::mut::new_node_prob){
         NEAT::add_node(network);
     }
     network.species = 0;
@@ -305,11 +302,11 @@ void NEAT::mutate(Genome& network){
 
 std::vector<NEAT::Genome> NEAT::get_next_population(std::vector<NEAT::Genome>& population, std::vector<int>& sort_index){
     std::vector<NEAT::Genome> new_population {};
-    int n_top { static_cast<int>(std::roundf(static_cast<float>(population.size()) * config::top_ratio)) };
+    int n_top { static_cast<int>(std::roundf(static_cast<float>(population.size()) * neat_config::top_ratio)) };
     int counter { 0 };
     NEAT::Genome network {};
 
-    for (int i {}; i<config::n_pop; ++i){
+    for (int i {}; i<neat_config::n_pop; ++i){
         network = population[sort_index[counter]];
         NEAT::mutate(network);
         network.species = 0;        
@@ -324,7 +321,7 @@ std::vector<NEAT::Genome> NEAT::get_next_population(std::vector<NEAT::Genome>& p
 
 
 void NEAT::add_node(Genome& network){
-    if (static_cast<int>(network.node_genes.size()) > config::max_nodes){
+    if (static_cast<int>(network.node_genes.size()) > neat_config::max_nodes){
         return;
     }
 

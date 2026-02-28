@@ -1,6 +1,5 @@
-#include "config.h"
 #include "events.h"
-#include <iostream>
+
 
 void process_events(sf::Window& window, CartPole& cart_pole){
     while (const std::optional event = window.pollEvent()){
