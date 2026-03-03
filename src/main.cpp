@@ -21,6 +21,7 @@ float get_reward(CartPole& cart_pole){
     //     reward -= 0.5f;
     // }
     reward -= std::abs(cart_pole.x) / (static_cast<float>(config::width) * 0.5f);
+    reward -= std::abs(cart_pole.w) * 1e-1;
     return reward;
 }
 
