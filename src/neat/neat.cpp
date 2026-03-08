@@ -270,7 +270,7 @@ void NEAT::bias_mod(NEAT::Genome& network){
 void NEAT::weight_mod(NEAT::Genome& network){
 	int idx { Random::get(0, static_cast<int>(network.conn_genes.size() - 1)) };
 	if (Random::get_uniform<float>(0, 1) <= neat_config::mut::new_value_prob){
-		network.conn_genes[idx].weight = Random::random_normal<float>(0.f, 0.1f);
+		network.conn_genes[idx].weight = Random::random_normal<float>(0.f, 1.f);
 	}
 	else{
 		network.conn_genes[idx].weight += Random::random_normal<float>(0.f, 0.1f);
@@ -302,11 +302,12 @@ void NEAT::mutate(Genome& network){
 
 std::vector<NEAT::Genome> NEAT::get_next_population(std::vector<NEAT::Genome>& population, std::vector<int>& sort_index){
     std::vector<NEAT::Genome> new_population {};
-    int n_top { static_cast<int>(std::roundf(static_cast<float>(population.size()) * neat_config::top_ratio)) };
+    int n_pop { static_cast<int>(population.size()) };
+    int n_top { static_cast<int>(std::roundf(static_cast<float>(n_pop) * neat_config::top_ratio)) };
     int counter { 0 };
     NEAT::Genome network {};
 
-    for (int i {}; i<neat_config::n_pop; ++i){
+    for (int i {}; i<n_pop; ++i){
         network = population[sort_index[counter]];
         NEAT::mutate(network);
         network.species = 0;        
@@ -589,6 +590,7 @@ float NEAT::get_activation(int node_type, float value){
         case 0: return value;
         case 1: return std::tanh(value);
         case 2: return std::tanh(value);
+        // case 2: return (value > 0.f) ? value : 0;
         case 3: return value;
         default: return value;
     }

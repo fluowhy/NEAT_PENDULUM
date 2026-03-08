@@ -5,6 +5,11 @@
 #include "events.h"
 #include <SFML/Graphics.hpp>
 #include <iostream>
+#include <thread>
+#include <mutex>
+
+
+std::mutex mutex;
 
 
 float deg_to_rad(float deg){
@@ -15,13 +20,13 @@ float deg_to_rad(float deg){
 float get_reward(CartPole& cart_pole){
     float reward { 0.f };
     if (std::abs(cart_pole.angle) < deg_to_rad(config::ang_thr_deg)){
-        reward = 1.f;
+        reward = 2.f * config::dt / (std::abs(cart_pole.w) + 1);
     }
     // if (std::abs(cart_pole.x) > 100){
     //     reward -= 0.5f;
     // }
-    reward -= std::abs(cart_pole.x) / (static_cast<float>(config::width) * 0.5f);
-    reward -= std::abs(cart_pole.w) * 1e-1;
+    reward -= std::abs(cart_pole.x) / (static_cast<float>(config::width) * 0.5f) * config::dt;
+    // reward -= std::abs(cart_pole.w) * config::dt * 0.5f;
     return reward;
 }
 
@@ -39,6 +44,8 @@ std::vector<float> get_nn_input(CartPole& cart_pole){
     std::vector<float> input_array(config::n_in, 0);
     input_array[0] = cart_pole.x / (static_cast<float>(config::width) * 0.5f);
     input_array[1] = cart_pole.angle;
+    // input_array[1] = std::cos(cart_pole.angle);
+    // input_array[2] = std::sin(cart_pole.angle);
     input_array[2] = cart_pole.vx / (static_cast<float>(config::width) * 0.5f);
     input_array[3] = cart_pole.w;
     return input_array;
@@ -50,16 +57,17 @@ void print_state(CartPole& cart_pole){
 }
 
 
-float simulate(NEAT::Genome& genome){
+void simulate(NEAT::Genome& genome, std::vector<float>& fitness_array, int idx){
     CartPole cart_pole {};
     cart_pole.set();
-
+    
     std::vector<float> nn_input(config::n_in, 0);
     std::vector<float> nn_output(config::n_out, 0);
-    std::vector<float> rewards {};
+    float fitness { 0 };
     float sim_time { config::max_sim_time };
+    float xpos { std::abs(cart_pole.x) };
 
-    while (sim_time > 0){
+    while ((sim_time > 0) & (static_cast<int>(fitness) < config::max_fitness) & (xpos < static_cast<float>(config::width) * 0.5f)){
         cart_pole.force = 0;
 
         nn_input = get_nn_input(cart_pole);
@@ -69,14 +77,22 @@ float simulate(NEAT::Genome& genome){
         dynamics(cart_pole);
         cart_pole.update();
         // print_state(cart_pole);
-        rewards.push_back(get_reward(cart_pole));
+        fitness += get_reward(cart_pole);
         sim_time -= config::dt;
+        xpos = std::abs(cart_pole.x);
     }
-    return std::reduce(rewards.begin(), rewards.end());
+
+    // float fitness { std::reduce(rewards.begin(), rewards.end()) };
+    std::unique_lock<std::mutex> lock(mutex);
+    fitness_array[idx] = fitness;
 }
 
 
-float simulate(sf::RenderWindow& window, NEAT::Genome& genome){
+float simulate_display(NEAT::Genome& genome){
+    sf::RenderWindow window(sf::VideoMode({ config::window_size_x, config::window_size_y }), "Cart Pole");
+    window.setFramerateLimit(config::frame_rate);
+    window.setVerticalSyncEnabled(true);
+
     CartPole cart_pole {};
     cart_pole.set();
 
@@ -86,7 +102,7 @@ float simulate(sf::RenderWindow& window, NEAT::Genome& genome){
 
     std::vector<float> nn_input(config::n_in, 0);
     std::vector<float> nn_output(config::n_out, 0);
-    std::vector<float> rewards {};
+    float fitness { 0 };
 
     while (window.isOpen()){
         cart_pole.force = 0;
@@ -95,11 +111,12 @@ float simulate(sf::RenderWindow& window, NEAT::Genome& genome){
         nn_input = get_nn_input(cart_pole);
         nn_output = NEAT::forward(nn_input, genome);
         cart_pole.force = nn_output[0] * config::max_force;
+        // std::cout << "Force: " << cart_pole.force << " N\n";
 
         dynamics(cart_pole);
         cart_pole.update();
-        // print_state(cart_pole);
-        rewards.push_back(get_reward(cart_pole));
+        print_state(cart_pole);
+        fitness += get_reward(cart_pole);
 
         // rectangle.setFillColor(sf::Color::Black);        
         window.clear(sf::Color::Black);
@@ -108,7 +125,7 @@ float simulate(sf::RenderWindow& window, NEAT::Genome& genome){
         window.draw(cart_pole.arm);
         window.display();
     }
-    return std::reduce(rewards.begin(), rewards.end());
+    return fitness;
 }
 
 
@@ -116,6 +133,10 @@ int main(){
     std::vector<NEAT::Genome> new_genomes { NEAT::generate_initial_networks(config::n_pop, config::n_in, config::n_out) };
     std::vector<NEAT::Genome> genomes {};
     std::vector<float> fitness(config::n_pop, 0);
+    int n_threads = std::thread::hardware_concurrency();
+    std::cout << "Max number of threads: " << n_threads << "\n";
+    std::vector<std::thread> thread_pool {};
+    int thread_counter { 0 };
 
     float sim_reward {};
     std::vector<int> sort_index {};
@@ -123,23 +144,33 @@ int main(){
     for (int gen {0}; gen<config::n_gen; ++gen){
         std::cout << "Generation: " << gen << "\n";
         genomes.clear();
+        // thread_pool.clear();
         genomes = new_genomes;
         for (int i {0}; i<config::n_pop; ++i){
-            sim_reward = simulate(genomes[i]);
-            fitness[i] = sim_reward;
-            
+            // sim_reward = simulate(genomes[i], fitness, i);
+            // fitness[i] = sim_reward;
+            thread_pool.push_back(std::thread(simulate, std::ref(genomes[i]), std::ref(fitness), i));
+            thread_counter += 1;
+            if (thread_counter >= n_threads){
+                // std::cout << "Joining threads.\n";
+                for (int j {0}; j<n_threads; ++j){
+                    thread_pool[j].join();
+                }
+                thread_counter = 0;
+                thread_pool.clear();
+            }
         }
+        
+
         sort_index = NEAT::get_sorted_index(fitness);
         std::cout << "Max fitness: " << fitness[sort_index[0]] << "\n";
         // print_vector(fitness);
         new_genomes = NEAT::get_next_population(genomes, sort_index);
     }
 
-    sf::RenderWindow window(sf::VideoMode({ config::window_size_x, config::window_size_y }), "Cart Pole");
-    window.setFramerateLimit(config::frame_rate);
-    window.setVerticalSyncEnabled(true);
+    
 
-    sim_reward = simulate(window, genomes[sort_index[0]]);
+    sim_reward = simulate_display(genomes[sort_index[0]]);
     std::cout << "Reward: " << sim_reward << "\n";
 
     return 0;

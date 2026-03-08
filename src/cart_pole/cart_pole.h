@@ -1,11 +1,13 @@
 #pragma once
 
+#include "random.h"
 #include "config.h"
 #include "cmath"
 #include <SFML/Graphics.hpp>
 
 
 struct CartPole{
+    // float x { Random::random_normal<float>(0, 10) };
     float x { 0 };
     float vx { 0 };
     float ax { 0 };

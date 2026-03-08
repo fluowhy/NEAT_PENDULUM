@@ -23,6 +23,13 @@ void dynamics(CartPole& cart_pole){
     cart_pole.w += cart_pole.w_dot * config::dt;
     cart_pole.angle += cart_pole.w * config::dt;
 
+    if (cart_pole.angle > 3.1416){
+        cart_pole.angle += - 2 * 3.1416;
+    }
+    else if (cart_pole.angle < -3.1416){
+        cart_pole.angle += 2 * 3.1416;
+    }
+
     cart_pole.vx += cart_pole.ax * config::dt;
     cart_pole.x += cart_pole.vx * config::dt;
 }

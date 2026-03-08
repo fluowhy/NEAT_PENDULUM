@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD=23)
 set(CMAKE_CXX_COMPILER=g++)
 set(CMAKE_BUILD_TYPE=Release)
 
+find_package(Threads REQUIRED)
+
 # Release
 include(FetchContent)
 FetchContent_Declare(SFML
@@ -34,7 +36,7 @@ target_link_libraries(events PRIVATE SFML::Graphics)
 set(MY_EXECUTABLE_SOURCES src/main.cpp)
 add_executable(main ${MY_EXECUTABLE_SOURCES})
 target_include_directories(main PRIVATE src/cart_pole src/neat src/events src/neat src/)
-target_link_libraries(main PRIVATE SFML::Graphics cart_pole events neat)
+target_link_libraries(main PRIVATE SFML::Graphics cart_pole events neat Threads::Threads)
 
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
