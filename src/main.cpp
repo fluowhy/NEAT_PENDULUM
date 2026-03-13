@@ -13,12 +13,87 @@ std::mutex mutex;
 
 
 template <typename T>
+void print_vector(std::vector<T>& v){
+    for (T vi : v){
+        std::cout << vi << ", ";
+    }
+    std::cout << "\n";
+}
+
+
+template <typename T>
 void shift_and_insert(std::vector<T>& x, T value){
     // shifts vector in one position and insert value in index 0
     int shift { 1 };
     std::move(begin(x), end(x) - shift, begin(x) + shift);
     std::fill(begin(x), begin(x) + shift, value);
 }
+
+
+class Probe: public sf::Drawable{
+    public:
+        // sf::RectangleShape rectangle {};
+        Probe(int w, int l, int xo, int yo, float tw, float dt){
+            x_size = w;
+            y_size = l;
+            x_offset = xo;
+            y_offset = yo;
+            temporal_window = tw;
+            sampling_period = dt;
+            n_div = static_cast<float>(static_cast<int>(temporal_window / sampling_period));
+            n_samples = n_div + 1;
+            values.resize(n_samples);
+            timestamps.resize(n_samples);
+            lines.resize(n_samples);
+            scale_factor = static_cast<float>(y_size) / 400.f;
+
+            for (int i{ 0 }; i<n_samples; ++i){
+                lines[i].setSize({ static_cast<float>(x_size) / n_div, 1 });
+                lines[i].setFillColor(sf::Color::Blue);
+                std::cout << x_offset + x_size * (1 - static_cast<float>(i) / static_cast<float>(n_div)) << "\n";
+                lines[i].setPosition({ x_offset + x_size * (1 - static_cast<float>(i) / static_cast<float>(n_div)), y_offset + static_cast<float>(y_size) * 0.5f - values[i] * scale_factor});
+            }
+
+            std::fill(values.begin(), values.end(), 0.f);
+            std::fill(timestamps.begin(), timestamps.end(), 0.f);
+
+            rectangle.setSize({ static_cast<float>(x_size), static_cast<float>(y_size) });
+            rectangle.setFillColor(sf::Color::Yellow);
+            // rectangle.setOrigin({ static_cast<float>(x_size) * 0.5f, static_cast<float>(y_size) * 0.5f });
+            rectangle.setPosition({ static_cast<float>(x_offset), static_cast<float>(y_offset)});            
+        }
+
+        void update(float value, float time){
+            shift_and_insert(values, value);
+            // print_vector<float>(values);
+            shift_and_insert(timestamps, time);
+            // print_vector<float>(timestamps);
+            for (int i{ 0 }; i<n_samples; ++i){
+                lines[i].setPosition({ x_offset + x_size * (1 - static_cast<float>(i) / static_cast<float>(n_div)), y_offset + static_cast<float>(y_size) * 0.5f - values[i] * scale_factor});
+            }
+        }
+
+    private:
+        void draw(sf::RenderTarget& target, sf::RenderStates states) const override{
+            target.draw(rectangle, states);
+            for (auto& rec : lines){
+                target.draw(rec);
+            }
+        }
+        int x_size {};
+        int y_size {};
+        int x_offset {};
+        int y_offset {};
+        sf::RectangleShape rectangle {};
+        std::vector<float> values {};
+        std::vector<float> timestamps {};
+        float temporal_window {};
+        float sampling_period {};
+        int n_samples {};
+        float n_div {};
+        std::vector<sf::RectangleShape> lines {};
+        float scale_factor {};
+    };
 
 
 float deg_to_rad(float deg){
@@ -37,15 +112,6 @@ float get_reward(CartPole& cart_pole){
     reward -= std::abs(cart_pole.x) / (static_cast<float>(config::width) * 0.5f) * config::dt;
     // reward -= std::abs(cart_pole.w) * config::dt * 0.5f;
     return reward;
-}
-
-
-template <typename T>
-void print_vector(std::vector<T>& v){
-    for (T vi : v){
-        std::cout << vi << ", ";
-    }
-    std::cout << "\n";
 }
 
 
@@ -115,8 +181,10 @@ float simulate_display(NEAT::Genome& genome){
     std::vector<float> nn_output(config::n_out, 0);
     float fitness { 0 };
 
-    std::vector<float> x_pos(5, 0);
-    std::vector<float> probe_time(5, 0);
+    // std::vector<float> x_pos(5, 0);
+    // std::vector<float> probe_time(5, 0);
+    Probe x_probe { 200, 100, 10, 250, 1.f, config::dt };
+    sf::Clock clock;
 
     while (window.isOpen()){
         cart_pole.force = 0;
@@ -130,15 +198,17 @@ float simulate_display(NEAT::Genome& genome){
         dynamics(cart_pole);
         cart_pole.update();
         print_state(cart_pole);
-        shift_and_insert(x_pos, cart_pole.x);
-        print_vector<float>(x_pos);
+        // shift_and_insert(x_pos, cart_pole.x);
+        // print_vector<float>(x_pos);
         fitness += get_reward(cart_pole);
 
+        x_probe.update(cart_pole.x, clock.getElapsedTime().asSeconds());
         // rectangle.setFillColor(sf::Color::Black);        
         window.clear(sf::Color::Black);
         window.draw(rectangle);
         window.draw(cart_pole.body);
         window.draw(cart_pole.arm);
+        window.draw(x_probe);
         window.display();
     }
     return fitness;

@@ -16,7 +16,7 @@ namespace config{
     const int offset_y_rect { 50 };
     const float max_sim_time { 40 };
     const int n_pop { 1024 };
-    const int n_gen { 256 };
+    const int n_gen { 16 };
     const int n_in { 4 };
     const int n_out { 1 };
     const float ang_thr_deg { 10.f };
