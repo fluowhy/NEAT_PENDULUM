@@ -45,11 +45,11 @@ void CartPole::update(){
 
 
 void CartPole::set(){
-    body.setFillColor(sf::Color(0, 255, 0));
+    body.setFillColor(sf::Color{ 0xAAC4F5ff });
     body.setSize({ config::cart::width, config::cart::height });
     body.setOrigin({ config::cart::width * 0.5f, config::cart::height * 0.5f });
 
-    arm.setFillColor(sf::Color(0, 128, 0));
+    arm.setFillColor(sf::Color{ 0xAAC4F5ff });
     arm.setSize({ config::cart::pole_width, config::cart::pole_length });
     arm.setOrigin({ config::cart::pole_width * 0.5f, 0 });
 }

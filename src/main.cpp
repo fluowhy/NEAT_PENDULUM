@@ -32,67 +32,84 @@ void shift_and_insert(std::vector<T>& x, T value){
 
 class Probe: public sf::Drawable{
     public:
-        // sf::RectangleShape rectangle {};
-        Probe(int w, int l, int xo, int yo, float tw, float dt){
+        Probe(const std::string& title, int w, int l, int xo, int yo, float tw, float dt, float yr, sf::Font font){
+            my_title = title;
             x_size = w;
             y_size = l;
             x_offset = xo;
             y_offset = yo;
             temporal_window = tw;
             sampling_period = dt;
+            y_range = yr;
+            my_font = font;
+
             n_div = static_cast<float>(static_cast<int>(temporal_window / sampling_period));
-            n_samples = n_div + 1;
+            n_samples = n_div;
             values.resize(n_samples);
-            timestamps.resize(n_samples);
+            // timestamps.resize(n_samples);
             lines.resize(n_samples);
-            scale_factor = static_cast<float>(y_size) / 400.f;
+            scale_factor = static_cast<float>(y_size) / yr;
 
             for (int i{ 0 }; i<n_samples; ++i){
-                lines[i].setSize({ static_cast<float>(x_size) / n_div, 1 });
-                lines[i].setFillColor(sf::Color::Blue);
-                std::cout << x_offset + x_size * (1 - static_cast<float>(i) / static_cast<float>(n_div)) << "\n";
-                lines[i].setPosition({ x_offset + x_size * (1 - static_cast<float>(i) / static_cast<float>(n_div)), y_offset + static_cast<float>(y_size) * 0.5f - values[i] * scale_factor});
+                lines[i].setSize({ static_cast<float>(x_size) / n_div, 2 });
+                lines[i].setFillColor(sf::Color{ 0xE97F4AFF });
+                // std::cout << x_offset + x_size * (1 - static_cast<float>(i) / static_cast<float>(n_div)) << "\n";
+                lines[i].setPosition({ x_offset + x_size * (1 - static_cast<float>(i + 1) / static_cast<float>(n_div)), y_offset + static_cast<float>(y_size) * 0.5f - values[i] * scale_factor});
             }
 
             std::fill(values.begin(), values.end(), 0.f);
-            std::fill(timestamps.begin(), timestamps.end(), 0.f);
+            // std::fill(timestamps.begin(), timestamps.end(), 0.f);
 
             rectangle.setSize({ static_cast<float>(x_size), static_cast<float>(y_size) });
-            rectangle.setFillColor(sf::Color::Yellow);
+            rectangle.setFillColor(sf::Color{ 0xE2E2E2FF });
             // rectangle.setOrigin({ static_cast<float>(x_size) * 0.5f, static_cast<float>(y_size) * 0.5f });
-            rectangle.setPosition({ static_cast<float>(x_offset), static_cast<float>(y_offset)});            
+            rectangle.setPosition({ static_cast<float>(x_offset), static_cast<float>(y_offset) });
+
+            // sf::Text my_text = sf::Text(font, title, 30);
+            // // my_text.setFont(font);
+            // // my_text.setString(title);
+            // my_text.setPosition({ static_cast<float>(x_offset), static_cast<float>(y_offset) - 10 });
+            // my_text.setFillColor(sf::Color{ 0xE97F4AFF });
         }
 
         void update(float value, float time){
             shift_and_insert(values, value);
             // print_vector<float>(values);
-            shift_and_insert(timestamps, time);
+            // shift_and_insert(timestamps, time);
             // print_vector<float>(timestamps);
             for (int i{ 0 }; i<n_samples; ++i){
-                lines[i].setPosition({ x_offset + x_size * (1 - static_cast<float>(i) / static_cast<float>(n_div)), y_offset + static_cast<float>(y_size) * 0.5f - values[i] * scale_factor});
+                lines[i].setPosition({ x_offset + x_size * (1 - static_cast<float>(i + 1) / static_cast<float>(n_div)), y_offset + static_cast<float>(y_size) * 0.5f - values[i] * scale_factor});
             }
         }
 
     private:
         void draw(sf::RenderTarget& target, sf::RenderStates states) const override{
+            sf::Text my_text(my_font, my_title, 18);
+            my_text.setPosition({ static_cast<float>(x_offset), static_cast<float>(y_offset) - 20 });
+            my_text.setFillColor(sf::Color{ 0x1C0F13FF });
             target.draw(rectangle, states);
+            target.draw(my_text, states);
             for (auto& rec : lines){
                 target.draw(rec);
             }
         }
+
+        std::string my_title;
         int x_size {};
         int y_size {};
         int x_offset {};
         int y_offset {};
         sf::RectangleShape rectangle {};
         std::vector<float> values {};
-        std::vector<float> timestamps {};
+        // std::vector<float> timestamps {};
         float temporal_window {};
         float sampling_period {};
         int n_samples {};
         float n_div {};
         std::vector<sf::RectangleShape> lines {};
         float scale_factor {};
+        float y_range {};
+        sf::Font my_font;
     };
 
 
@@ -106,10 +123,16 @@ float get_reward(CartPole& cart_pole){
     if (std::abs(cart_pole.angle) < deg_to_rad(config::ang_thr_deg)){
         reward = 2.f * config::dt / (std::abs(cart_pole.w) + 1);
     }
+    if (std::abs(cart_pole.x) < 10){
+        reward += 0.5f * config::dt;
+    }
+    if (std::abs(cart_pole.x) >= 10){
+        reward -= 0.1f * config::dt;
+    }
     // if (std::abs(cart_pole.x) > 100){
     //     reward -= 0.5f;
     // }
-    reward -= std::abs(cart_pole.x) / (static_cast<float>(config::width) * 0.5f) * config::dt;
+    // reward -= std::abs(cart_pole.x) / (static_cast<float>(config::width)) * config::dt;
     // reward -= std::abs(cart_pole.w) * config::dt * 0.5f;
     return reward;
 }
@@ -173,8 +196,14 @@ float simulate_display(NEAT::Genome& genome){
     CartPole cart_pole {};
     cart_pole.set();
 
+    // font
+    sf::Font font;
+    if (!font.openFromFile("../../fonts/Roboto.ttf")){
+        std::cerr << "Couldn't load font\n";
+    }
+
     sf::RectangleShape rectangle({ config::width, config::height });
-    rectangle.setFillColor(sf::Color::White);
+    rectangle.setFillColor(sf::Color{ 0xFFF8DEFF });
     rectangle.setPosition({ static_cast<float>(config::offset_x_rect), static_cast<float>(config::offset_y_rect) });
 
     std::vector<float> nn_input(config::n_in, 0);
@@ -183,16 +212,27 @@ float simulate_display(NEAT::Genome& genome){
 
     // std::vector<float> x_pos(5, 0);
     // std::vector<float> probe_time(5, 0);
-    Probe x_probe { 200, 100, 10, 250, 1.f, config::dt };
+    int probe_window_length { 100 };
+    int probe_window_width { 200 };
+    int xoff { 20 };
+    int xdelta { probe_window_width + 10 };
+    int yoff { config::window_size_y - config::offset_y_rect - 2 * (20 + probe_window_length) };
+    int ydelta { probe_window_length + 20 };
+    Probe x_probe   { "position", probe_window_width, probe_window_length, xoff, yoff + ydelta, 4.f, config::dt, config::width, font };
+    Probe ang_probe { "angle", probe_window_width, probe_window_length, xoff + xdelta, yoff + ydelta, 4.f, config::dt, 6.4f, font };
+    Probe v_probe   { "velocity", probe_window_width, probe_window_length, xoff + 2 * xdelta, yoff + ydelta, 4.f, config::dt, 800.f, font };
+    Probe w_probe   { "angular velocity", probe_window_width, probe_window_length, xoff + 3 * xdelta, yoff + ydelta, 4.f, config::dt, 10.f, font };
+    Probe f_probe   { "force", probe_window_width, probe_window_length, xoff, yoff, 4.f, config::dt, config::max_force * 2, font };
     sf::Clock clock;
 
     while (window.isOpen()){
-        cart_pole.force = 0;
-        process_events(window);
+        cart_pole.force = 0;        
         // process_events_user_inputs(window, cart_pole);
         nn_input = get_nn_input(cart_pole);
         nn_output = NEAT::forward(nn_input, genome);
         cart_pole.force = nn_output[0] * config::max_force;
+        // process_events(window);
+        process_events_user_inputs(window, cart_pole);
         // std::cout << "Force: " << cart_pole.force << " N\n";
 
         dynamics(cart_pole);
@@ -203,12 +243,20 @@ float simulate_display(NEAT::Genome& genome){
         fitness += get_reward(cart_pole);
 
         x_probe.update(cart_pole.x, clock.getElapsedTime().asSeconds());
+        ang_probe.update(cart_pole.angle, clock.getElapsedTime().asSeconds());
+        v_probe.update(cart_pole.vx, clock.getElapsedTime().asSeconds());
+        w_probe.update(cart_pole.w, clock.getElapsedTime().asSeconds());
+        f_probe.update(cart_pole.force, clock.getElapsedTime().asSeconds());
         // rectangle.setFillColor(sf::Color::Black);        
-        window.clear(sf::Color::Black);
+        window.clear(sf::Color{ 0x1C0F13FF });
         window.draw(rectangle);
         window.draw(cart_pole.body);
         window.draw(cart_pole.arm);
         window.draw(x_probe);
+        window.draw(ang_probe);
+        window.draw(v_probe);
+        window.draw(w_probe);
+        window.draw(f_probe);
         window.display();
     }
     return fitness;
