@@ -7,6 +7,7 @@
 #include <iostream>
 #include <thread>
 #include <mutex>
+#include <format>
 
 
 std::mutex mutex;
@@ -62,14 +63,10 @@ class Probe: public sf::Drawable{
 
             rectangle.setSize({ static_cast<float>(x_size), static_cast<float>(y_size) });
             rectangle.setFillColor(sf::Color{ 0xE2E2E2FF });
-            // rectangle.setOrigin({ static_cast<float>(x_size) * 0.5f, static_cast<float>(y_size) * 0.5f });
             rectangle.setPosition({ static_cast<float>(x_offset), static_cast<float>(y_offset) });
 
-            // sf::Text my_text = sf::Text(font, title, 30);
-            // // my_text.setFont(font);
-            // // my_text.setString(title);
-            // my_text.setPosition({ static_cast<float>(x_offset), static_cast<float>(y_offset) - 10 });
-            // my_text.setFillColor(sf::Color{ 0xE97F4AFF });
+            lim_inf = std::format("{:.1f}", - y_range * 0.5f);
+            lim_sup = std::format("{:.1f}", + y_range * 0.5f);
         }
 
         void update(float value, float time){
@@ -87,8 +84,14 @@ class Probe: public sf::Drawable{
             sf::Text my_text(my_font, my_title, 18);
             my_text.setPosition({ static_cast<float>(x_offset), static_cast<float>(y_offset) - 20 });
             my_text.setFillColor(sf::Color{ 0x1C0F13FF });
+
+            sf::Text linf(my_font, lim_inf, 10);
+            linf.setPosition({ static_cast<float>(x_offset) - 10, static_cast<float>(y_offset) + y_size });
+            linf.setFillColor(sf::Color{ 0x1C0F13FF });
+
             target.draw(rectangle, states);
             target.draw(my_text, states);
+            target.draw(linf, states);
             for (auto& rec : lines){
                 target.draw(rec);
             }
@@ -110,6 +113,8 @@ class Probe: public sf::Drawable{
         float scale_factor {};
         float y_range {};
         sf::Font my_font;
+        std::string lim_inf;
+        std::string lim_sup;
     };
 
 
@@ -198,7 +203,7 @@ float simulate_display(NEAT::Genome& genome){
 
     // font
     sf::Font font;
-    if (!font.openFromFile("../../fonts/Roboto.ttf")){
+    if (!font.openFromFile("fonts/Roboto.ttf")){
         std::cerr << "Couldn't load font\n";
     }
 
@@ -215,7 +220,7 @@ float simulate_display(NEAT::Genome& genome){
     int probe_window_length { 100 };
     int probe_window_width { 200 };
     int xoff { 20 };
-    int xdelta { probe_window_width + 10 };
+    int xdelta { probe_window_width + 20 };
     int yoff { config::window_size_y - config::offset_y_rect - 2 * (20 + probe_window_length) };
     int ydelta { probe_window_length + 20 };
     Probe x_probe   { "position", probe_window_width, probe_window_length, xoff, yoff + ydelta, 4.f, config::dt, config::width, font };
