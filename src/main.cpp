@@ -67,6 +67,9 @@ class Probe: public sf::Drawable{
 
             lim_inf = std::format("{:.1f}", - y_range * 0.5f);
             lim_sup = std::format("{:.1f}", + y_range * 0.5f);
+
+            t0_text = std::format("{:.1f}", 0.f);
+            tf_text = std::format("{:.1f}", tw);
         }
 
         void update(float value, float time){
@@ -86,12 +89,27 @@ class Probe: public sf::Drawable{
             my_text.setFillColor(sf::Color{ 0x1C0F13FF });
 
             sf::Text linf(my_font, lim_inf, 10);
-            linf.setPosition({ static_cast<float>(x_offset) - 10, static_cast<float>(y_offset) + y_size });
+            linf.setPosition({ static_cast<float>(x_offset) - 20, static_cast<float>(y_offset) + y_size - 10});
             linf.setFillColor(sf::Color{ 0x1C0F13FF });
+
+            sf::Text lsup(my_font, lim_sup, 10);
+            lsup.setPosition({ static_cast<float>(x_offset) - 20, static_cast<float>(y_offset) });
+            lsup.setFillColor(sf::Color{ 0x1C0F13FF });
+
+            sf::Text tini(my_font, t0_text, 10);
+            tini.setPosition({ static_cast<float>(x_offset) + x_size, static_cast<float>(y_offset) + y_size });
+            tini.setFillColor(sf::Color{ 0x1C0F13FF });
+
+            sf::Text tfin(my_font, tf_text, 10);
+            tfin.setPosition({ static_cast<float>(x_offset), static_cast<float>(y_offset) + y_size });
+            tfin.setFillColor(sf::Color{ 0x1C0F13FF });
 
             target.draw(rectangle, states);
             target.draw(my_text, states);
             target.draw(linf, states);
+            target.draw(lsup, states);
+            target.draw(tini, states);
+            target.draw(tfin, states);
             for (auto& rec : lines){
                 target.draw(rec);
             }
@@ -115,6 +133,8 @@ class Probe: public sf::Drawable{
         sf::Font my_font;
         std::string lim_inf;
         std::string lim_sup;
+        std::string t0_text;
+        std::string tf_text;
     };
 
 
@@ -219,10 +239,10 @@ float simulate_display(NEAT::Genome& genome){
     // std::vector<float> probe_time(5, 0);
     int probe_window_length { 100 };
     int probe_window_width { 200 };
-    int xoff { 20 };
-    int xdelta { probe_window_width + 20 };
-    int yoff { config::window_size_y - config::offset_y_rect - 2 * (20 + probe_window_length) };
-    int ydelta { probe_window_length + 20 };
+    int xoff { 40 };
+    int xdelta { probe_window_width + 30 };
+    int yoff { config::window_size_y - config::offset_y_rect - 2 * (30 + probe_window_length) };
+    int ydelta { probe_window_length + 30 };
     Probe x_probe   { "position", probe_window_width, probe_window_length, xoff, yoff + ydelta, 4.f, config::dt, config::width, font };
     Probe ang_probe { "angle", probe_window_width, probe_window_length, xoff + xdelta, yoff + ydelta, 4.f, config::dt, 6.4f, font };
     Probe v_probe   { "velocity", probe_window_width, probe_window_length, xoff + 2 * xdelta, yoff + ydelta, 4.f, config::dt, 800.f, font };
@@ -242,7 +262,7 @@ float simulate_display(NEAT::Genome& genome){
 
         dynamics(cart_pole);
         cart_pole.update();
-        print_state(cart_pole);
+        // print_state(cart_pole);
         // shift_and_insert(x_pos, cart_pole.x);
         // print_vector<float>(x_pos);
         fitness += get_reward(cart_pole);
