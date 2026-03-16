@@ -1,4 +1,5 @@
 #include "config.h"
+#include "display.h"
 #include "neat.h"
 #include "cart_pole.h"
 #include "random.h"
@@ -7,7 +8,6 @@
 #include <iostream>
 #include <thread>
 #include <mutex>
-#include <format>
 
 
 std::mutex mutex;
@@ -22,120 +22,7 @@ void print_vector(std::vector<T>& v){
 }
 
 
-template <typename T>
-void shift_and_insert(std::vector<T>& x, T value){
-    // shifts vector in one position and insert value in index 0
-    int shift { 1 };
-    std::move(begin(x), end(x) - shift, begin(x) + shift);
-    std::fill(begin(x), begin(x) + shift, value);
-}
 
-
-class Probe: public sf::Drawable{
-    public:
-        Probe(const std::string& title, int w, int l, int xo, int yo, float tw, float dt, float yr, sf::Font font){
-            my_title = title;
-            x_size = w;
-            y_size = l;
-            x_offset = xo;
-            y_offset = yo;
-            temporal_window = tw;
-            sampling_period = dt;
-            y_range = yr;
-            my_font = font;
-
-            n_div = static_cast<float>(static_cast<int>(temporal_window / sampling_period));
-            n_samples = n_div;
-            values.resize(n_samples);
-            // timestamps.resize(n_samples);
-            lines.resize(n_samples);
-            scale_factor = static_cast<float>(y_size) / yr;
-
-            for (int i{ 0 }; i<n_samples; ++i){
-                lines[i].setSize({ static_cast<float>(x_size) / n_div, 2 });
-                lines[i].setFillColor(sf::Color{ 0xE97F4AFF });
-                // std::cout << x_offset + x_size * (1 - static_cast<float>(i) / static_cast<float>(n_div)) << "\n";
-                lines[i].setPosition({ x_offset + x_size * (1 - static_cast<float>(i + 1) / static_cast<float>(n_div)), y_offset + static_cast<float>(y_size) * 0.5f - values[i] * scale_factor});
-            }
-
-            std::fill(values.begin(), values.end(), 0.f);
-            // std::fill(timestamps.begin(), timestamps.end(), 0.f);
-
-            rectangle.setSize({ static_cast<float>(x_size), static_cast<float>(y_size) });
-            rectangle.setFillColor(sf::Color{ 0xE2E2E2FF });
-            rectangle.setPosition({ static_cast<float>(x_offset), static_cast<float>(y_offset) });
-
-            lim_inf = std::format("{:.1f}", - y_range * 0.5f);
-            lim_sup = std::format("{:.1f}", + y_range * 0.5f);
-
-            t0_text = std::format("{:.1f}", 0.f);
-            tf_text = std::format("{:.1f}", tw);
-        }
-
-        void update(float value, float time){
-            shift_and_insert(values, value);
-            // print_vector<float>(values);
-            // shift_and_insert(timestamps, time);
-            // print_vector<float>(timestamps);
-            for (int i{ 0 }; i<n_samples; ++i){
-                lines[i].setPosition({ x_offset + x_size * (1 - static_cast<float>(i + 1) / static_cast<float>(n_div)), y_offset + static_cast<float>(y_size) * 0.5f - values[i] * scale_factor});
-            }
-        }
-
-    private:
-        void draw(sf::RenderTarget& target, sf::RenderStates states) const override{
-            sf::Text my_text(my_font, my_title, 18);
-            my_text.setPosition({ static_cast<float>(x_offset), static_cast<float>(y_offset) - 20 });
-            my_text.setFillColor(sf::Color{ 0x1C0F13FF });
-
-            sf::Text linf(my_font, lim_inf, 10);
-            linf.setPosition({ static_cast<float>(x_offset) - 20, static_cast<float>(y_offset) + y_size - 10});
-            linf.setFillColor(sf::Color{ 0x1C0F13FF });
-
-            sf::Text lsup(my_font, lim_sup, 10);
-            lsup.setPosition({ static_cast<float>(x_offset) - 20, static_cast<float>(y_offset) });
-            lsup.setFillColor(sf::Color{ 0x1C0F13FF });
-
-            sf::Text tini(my_font, t0_text, 10);
-            tini.setPosition({ static_cast<float>(x_offset) + x_size, static_cast<float>(y_offset) + y_size });
-            tini.setFillColor(sf::Color{ 0x1C0F13FF });
-
-            sf::Text tfin(my_font, tf_text, 10);
-            tfin.setPosition({ static_cast<float>(x_offset), static_cast<float>(y_offset) + y_size });
-            tfin.setFillColor(sf::Color{ 0x1C0F13FF });
-
-            target.draw(rectangle, states);
-            target.draw(my_text, states);
-            target.draw(linf, states);
-            target.draw(lsup, states);
-            target.draw(tini, states);
-            target.draw(tfin, states);
-            for (auto& rec : lines){
-                target.draw(rec);
-            }
-        }
-
-        std::string my_title;
-        int x_size {};
-        int y_size {};
-        int x_offset {};
-        int y_offset {};
-        sf::RectangleShape rectangle {};
-        std::vector<float> values {};
-        // std::vector<float> timestamps {};
-        float temporal_window {};
-        float sampling_period {};
-        int n_samples {};
-        float n_div {};
-        std::vector<sf::RectangleShape> lines {};
-        float scale_factor {};
-        float y_range {};
-        sf::Font my_font;
-        std::string lim_inf;
-        std::string lim_sup;
-        std::string t0_text;
-        std::string tf_text;
-    };
 
 
 float deg_to_rad(float deg){

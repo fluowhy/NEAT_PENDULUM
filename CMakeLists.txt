@@ -21,6 +21,7 @@ FetchContent_MakeAvailable(SFML)
 set(NEAT_SOURCES src/neat/neat.cpp src/neat/topological_sort.cpp)
 set(CART_POLE_SOURCES src/cart_pole/cart_pole.cpp)
 set(EVENTS_SOURCES src/events/events.cpp)
+set(DISPLAY_SOURCES src/display/display.cpp)
 
 add_library(neat STATIC ${NEAT_SOURCES})
 target_include_directories(neat PRIVATE src/neat src/)
@@ -33,10 +34,14 @@ add_library(events STATIC ${EVENTS_SOURCES})
 target_include_directories(events PRIVATE src/cart_pole src/)
 target_link_libraries(events PRIVATE SFML::Graphics)
 
+add_library(display STATIC ${DISPLAY_SOURCES})
+# target_include_directories(display PRIVATE src/cart_pole src/)
+target_link_libraries(display PRIVATE SFML::Graphics)
+
 set(MY_EXECUTABLE_SOURCES src/main.cpp)
 add_executable(main ${MY_EXECUTABLE_SOURCES})
-target_include_directories(main PRIVATE src/cart_pole src/neat src/events src/neat src/)
-target_link_libraries(main PRIVATE SFML::Graphics cart_pole events neat Threads::Threads)
+target_include_directories(main PRIVATE src/cart_pole src/neat src/events src/neat src/display src/)
+target_link_libraries(main PRIVATE SFML::Graphics cart_pole events neat display Threads::Threads)
 
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
