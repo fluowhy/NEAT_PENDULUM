@@ -22,9 +22,6 @@ void print_vector(std::vector<T>& v){
 }
 
 
-
-
-
 float deg_to_rad(float deg){
     return deg * 3.1416f / 180.f;
 }
@@ -39,7 +36,7 @@ float get_reward(CartPole& cart_pole){
         reward += 0.5f * config::dt;
     }
     if (std::abs(cart_pole.x) >= 10){
-        reward -= 0.1f * config::dt;
+        reward -= 0.5f * config::dt;
     }
     // if (std::abs(cart_pole.x) > 100){
     //     reward -= 0.5f;
